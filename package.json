@@ -22,10 +22,8 @@
     "version": "node ./bin/tequila.mjs core-version"
   },
   "dependencies": {
-    "@teqfw/core": "github:teqfw/core",
-    "@teqfw/di": "github:teqfw/di",
-    "@teqfw/test": "github:teqfw/test",
-    "@teqfw/web": "github:teqfw/web"
-  },
-  "devDependencies": {}
+    "@teqfw/core": "github:teqfw/core#c9fd17c908dcaf86b1223e7df9840cc7d39dc6ee",
+    "@teqfw/di": "github:teqfw/di#0030f32bfeb6c4abd831fe68f731f54ae60f576b",
+    "@teqfw/web": "github:teqfw/web#0b3a9d84b91cdcf3fa2c462392897bd979edd2da"
+  }
 }

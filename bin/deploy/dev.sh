@@ -36,7 +36,6 @@ mkdir -p "${DIR_OWN}/@teqfw/"
 
 processRepo "teqfw/core"
 processRepo "teqfw/di"
-processRepo "teqfw/test"
 processRepo "teqfw/web"
 
 echo ""
