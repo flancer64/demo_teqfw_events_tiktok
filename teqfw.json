@@ -1,0 +1,20 @@
+{
+  "@teqfw/core": {
+    "commands": [],
+    "plugin": {}
+  },
+  "@teqfw/di": {
+    "autoload": {
+      "ns": "Demo",
+      "path": "./src"
+    },
+    "replace": {}
+  },
+  "@teqfw/web": {
+    "excludes": {
+      "handlers": [
+        "TeqFw_Web_Back_App_Server_Handler_Upload"
+      ]
+    }
+  }
+}

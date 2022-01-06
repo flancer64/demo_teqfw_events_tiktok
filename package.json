@@ -1,0 +1,31 @@
+{
+  "name": "@flancer64/demo_teqfw_events_tiktok",
+  "version": "0.1.0",
+  "description": "TikTok demo app",
+  "homepage": "https://github.com/flancer64/demo_teqfw_events_tiktok/",
+  "bugs": {
+    "url": "https://github.com/flancer64/demo_teqfw_events_tiktok/issues",
+    "email": "alex@flancer32.com"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Alex Gusev",
+    "email": "alex@flancer64.com",
+    "url": "https://github.com/flancer64"
+  },
+  "repository": "github:flancer64/demo_teqfw_events_tiktok",
+  "scripts": {
+    "help": "node ./bin/tequila.mjs -h",
+    "rebuild": "rm -fr node_modules package-lock.json && npm install",
+    "start": "node ./bin/tequila.mjs web-server-start -1",
+    "stop": "node ./bin/tequila.mjs web-server-stop",
+    "version": "node ./bin/tequila.mjs core-version"
+  },
+  "dependencies": {
+    "@teqfw/core": "github:teqfw/core",
+    "@teqfw/di": "github:teqfw/di",
+    "@teqfw/test": "github:teqfw/test",
+    "@teqfw/web": "github:teqfw/web"
+  },
+  "devDependencies": {}
+}

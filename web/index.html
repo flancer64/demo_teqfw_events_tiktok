@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="TeqFW Events: TikTok">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TeqFW Events: TikTok</title>
+    <style>
+        BODY {
+            align-items: center;
+            background-color: #E6966B;
+            box-sizing: border-box;
+            color: #2A180E;
+            display: grid;
+            height: 100vh;
+            justify-items: center;
+            margin: 0;
+            padding: 10px;
+        }
+
+        BODY > DIV {
+            text-align: center;
+        }
+    </style>
+    <script>
+        // DEFINE INNER FUNCTIONS
+
+        /**
+         * Dependency Injection: import code, create and setup container for frontend.
+         *
+         * @returns {Promise<TeqFw_Di_Shared_Container>}
+         */
+        async function initDiContainer() {
+            const urlWithPath = `${location.origin}${location.pathname}`;
+            const baseUrl = urlWithPath.endsWith('/') ? urlWithPath.slice(0, -1) : urlWithPath;
+            // load sources and create DI Container
+            const module = await import('./src/@teqfw/di/Shared/Container.mjs');
+            /** @type {typeof TeqFw_Di_Shared_Container} */
+            const Container = module.default;
+            /** @type {TeqFw_Di_Shared_Container} */
+            const container = new Container();
+            // load available namespaces from server
+            const res = await fetch('./api/@teqfw/web/load/namespaces');
+            const json = await res.json();
+            // add namespaces to container
+            if (json?.data?.items && Array.isArray(json.data.items))
+                for (const item of json.data.items)
+                    container.addSourceMapping(item.ns, baseUrl + item.path, true, item.ext);
+            // add replaces to container
+            if (json?.data?.replaces && Array.isArray(json.data.replaces))
+                for (const item of json.data.replaces)
+                    container.addModuleReplacement(item.orig, item.alter);
+            return container;
+        }
+
+        /**
+         * Switch off 'pause' for console logger.
+         * @param {TeqFw_Di_Shared_Container} container
+         * @return {Promise<void>}
+         */
+        async function initLogger(container) {
+            /** @type {TeqFw_Core_Shared_Logger} */
+            const logger = await container.get('TeqFw_Core_Shared_Logger$');
+            logger.pause(false);
+        }
+
+        /**
+         * Each frontend should have an own UUID to separate SSE streams on the back.
+         * Front UUID is saved in IndexedDB (TeqFw_Web_Front_Store).
+         * @param {TeqFw_Di_Shared_Container} container
+         * @return {Promise<void>}
+         */
+        async function initFrontUUID(container) {
+            /** @type {TeqFw_Web_Front_App_UUID} */
+            const uuid = await container.get('TeqFw_Web_Front_App_UUID$');
+            await uuid.init();
+        }
+
+        /**
+         * Create all event-driven processes on frontend.
+         * @param container
+         * @return {Promise<void>}
+         */
+        async function createProcesses(container) {
+            /** @type {TeqFw_Web_Front_Proc_Tik} */
+            await container.get('TeqFw_Web_Front_Proc_Tik$');
+        }
+
+        /**
+         * Wait until SSE connection will be established then continue.
+         * @param {TeqFw_Di_Shared_Container} container
+         * @return {Promise<TeqFw_Web_Front_Event_Connect_Event_Reverse_Opened.Dto>}
+         */
+        async function initBackToFrontEventStream(container) {
+            /** @type {TeqFw_Web_Front_App_Connect_Event_Reverse} */
+            const streamBf = await container.get('TeqFw_Web_Front_App_Connect_Event_Reverse$');
+            /** @type {TeqFw_Web_Front_Event_Connect_Event_Reverse_Opened} */
+            const efOpened = await container.get('TeqFw_Web_Front_Event_Connect_Event_Reverse_Opened$');
+            // const streamFb = await container.get('TeqFw_Web_Front_App_Connect_Event_Direct$');
+            // wait until stream will be opened
+            return new Promise((resolve) => {
+                streamBf.open(); // try to open SSE connection then re-try every 2 sec.
+                const retryId = setInterval(() => streamBf.open(), 2000);
+                // resolve promise when SSE connection will be opened (local event)
+                streamBf.subscribe(efOpened.getName(), (evt) => {
+                    clearInterval(retryId); // cancel retry attempts
+                    resolve(evt); // resolve promise and return local event message
+                });
+            });
+        }
+
+        /**
+         * Setup process to re-validate connection every 5 sec. and to re-establish it if closed.
+         * @param {TeqFw_Di_Shared_Container} container
+         * @return {Promise<void>}
+         */
+        async function setStreamReconnect(container) {
+            /** @type {TeqFw_Web_Front_App_Connect_Event_Reverse} */
+            const streamBf = await container.get('TeqFw_Web_Front_App_Connect_Event_Reverse$');
+            setInterval(() => {
+                if (!streamBf.stateOpen()) streamBf.open();
+            }, 5000);
+        }
+
+        // MAIN FUNCTIONALITY
+        self.addEventListener("load", async () => {
+            const container = await initDiContainer();
+            await initLogger(container);
+            await initFrontUUID(container);
+            await createProcesses(container);
+            await initBackToFrontEventStream(container);
+            await setStreamReconnect(container);
+        });
+    </script>
+</head>
+<body>
+<div>
+    <h4>Simple WebApp to send 'tik' events to the server when 'tok' event is received from it.</h4>
+    <div>Open DevTools to see events messages on console (Ctrl + Shift + I).</div>
+    <h5><a href="https://github.com/flancer64/demo_teqfw_events_tiktok">GitHub Repo</a></h5>
+</div>
+</body>
+</html>
